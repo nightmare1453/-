@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>自定义摸球实验</title>
+<style>
+    *{box-sizing:border-box;font-family:system-ui,sans-serif}
+    body{
+        background:#f8f9fa;
+        min-height:100vh;
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        padding:40px 20px;
+        gap:20px;
+    }
+    .title{
+        font-size:26px;
+        font-weight:bold;
+        color:#222;
+        margin-bottom:10px;
+    }
+
+    /* 输入区 */
+    .input-group{
+        display:flex;
+        gap:15px;
+        align-items:center;
+        margin-bottom:10px;
+        flex-wrap:wrap;
+        justify-content:center;
+    }
+    .input-item{
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        gap:5px;
+    }
+    .input-item label{
+        font-size:16px;
+        font-weight:bold;
+    }
+    .input-item input{
+        width:80px;
+        padding:10px;
+        font-size:16px;
+        border:2px solid #0d6efd;
+        border-radius:8px;
+        text-align:center;
+    }
+
+    /* 3D摸奖箱 */
+    .box{
+        width:340px;
+        height:240px;
+        background:linear-gradient(140deg,#222,#333);
+        border:4px solid #0d6efd;
+        border-radius:20px;
+        position:relative;
+        transform:perspective(800px) rotateX(12deg);
+        box-shadow:0 10px 30px rgba(0,0,0,0.3);
+        overflow:hidden;
+    }
+    .exit{
+        position:absolute;
+        bottom:0;
+        left:50%;
+        transform:translateX(-50%);
+        width:68px;
+        height:28px;
+        background:#0d6efd;
+        border-top-left-radius:10px;
+        border-top-right-radius:10px;
+    }
+
+    /* 球样式 */
+    .ball{
+        width:54px;
+        height:54px;
+        border-radius:50%;
+        box-shadow:0 4px 10px rgba(0,0,0,0.3);
+    }
+    .yellow{background:#ffc107;border:2px solid #e0a800;}
+    .white{background:#fff;border:2px solid #ddd;}
+    .black{background:#212529;border:2px solid #000;}
+
+    /* 掉落动画 */
+    #resultBall{
+        position:absolute;
+        bottom:100%;
+        left:50%;
+        transform:translateX(-50%);
+        opacity:0;
+    }
+    #resultBall.fall{
+        opacity:1;
+        animation:fall 0.8s ease-in-out forwards;
+    }
+    @keyframes fall{
+        0%{bottom:100%;transform:translateX(-50%) scale(0.8);}
+        50%{bottom:-65px;transform:translateX(-50%) scale(1.15);}
+        70%{bottom:-48px;transform:translateX(-50%) scale(1);}
+        85%{bottom:-58px;transform:translateX(-50%) scale(1);}
+        100%{bottom:-55px;transform:translateX(-50%) scale(1);}
+    }
+
+    /* 结果展示 */
+    .result-box{
+        width:200px;
+        height:110px;
+        background:#fff;
+        border:3px solid #0d6efd;
+        border-radius:14px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        box-shadow:0 4px 12px rgba(0,0,0,0.15);
+    }
+    #showBall{
+        width:66px;
+        height:66px;
+        transform:scale(0);
+        transition:transform 0.5s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    #showBall.show{transform:scale(1);}
+
+    /* 按钮组 */
+    .btns{
+        display:flex;
+        gap:12px;
+        flex-wrap:wrap;
+        justify-content:center;
+        margin-top:10px;
+    }
+    button{
+        padding:13px 26px;
+        font-size:16px;
+        border:none;
+        border-radius:12px;
+        cursor:pointer;
+        color:#fff;
+    }
+    .btn1{background:#0d6efd;}
+    .btn2{background:#198754;}
+    .btn3{background:#dc3545;}
+    button:disabled{background:#999;cursor:not-allowed;}
+
+    /* 统计 */
+    .stats{
+        background:#e9ecef;
+        padding:16px 24px;
+        border-radius:12px;
+        font-size:16px;
+        text-align:center;
+        line-height:1.6;
+        min-width:300px;
+    }
+    .log{
+        font-size:14px;color:#666;text-align:center;
+    }
+</style>
+</head>
+<body>
+
+<div class="title">自定义摸球实验</div>
+
+<!-- 输入球数量 -->
+<div class="input-group">
+    <div class="input-item">
+        <label>黄球数量</label>
+        <input type="number" id="y" min="0" value="1">
+    </div>
+    <div class="input-item">
+        <label>白球数量</label>
+        <input type="number" id="w" min="0" value="4">
+    </div>
+    <div class="input-item">
+        <label>黑球数量</label>
+        <input type="number" id="b" min="0" value="2">
+    </div>
+</div>
+
+<!-- 3D摸奖箱 -->
+<div class="box">
+    <div class="exit"></div>
+    <div id="resultBall" class="ball"></div>
+</div>
+
+<div style="font-weight:bold;margin-top:10px">本次摸球结果</div>
+<div class="result-box">
+    <div id="showBall" class="ball"></div>
+</div>
+
+<!-- 按钮 -->
+<div class="btns">
+    <button class="btn1" id="drawBtn">摸一次球</button>
+    <button class="btn2" id="simBtn">模拟1000次</button>
+    <button class="btn3" id="resetBtn">重置</button>
+</div>
+
+<!-- 统计 -->
+<div class="stats" id="stats">
+黄球：0 次<br>
+白球：0 次<br>
+黑球：0 次
+</div>
+<div class="log" id="log"></div>
+
+<script>
+const yInput = document.getElementById('y');
+const wInput = document.getElementById('w');
+const bInput = document.getElementById('b');
+const drawBtn = document.getElementById('drawBtn');
+const simBtn = document.getElementById('simBtn');
+const resetBtn = document.getElementById('resetBtn');
+const resultBall = document.getElementById('resultBall');
+const showBall = document.getElementById('showBall');
+const stats = document.getElementById('stats');
+const log = document.getElementById('log');
+
+let yellow = 0, white = 0, black = 0;
+let isRunning = false;
+
+// 随机摸球逻辑
+function draw(){
+    const y = parseInt(yInput.value) || 0;
+    const w = parseInt(wInput.value) || 0;
+    const b = parseInt(bInput.value) || 0;
+    const total = y + w + b;
+    if(total <= 0) return null;
+
+    const r = Math.random();
+    if(r < y/total) return 'yellow';
+    if(r < (y+w)/total) return 'white';
+    return 'black';
+}
+
+// 摸一次
+drawBtn.onclick = function(){
+    if(isRunning) return;
+    const y = parseInt(yInput.value)||0;
+    const w = parseInt(wInput.value)||0;
+    const b = parseInt(bInput.value)||0;
+    const total = y+w+b;
+    if(total <=0){
+        alert('请输入至少1个球！');
+        return;
+    }
+
+    isRunning = true;
+    drawBtn.disabled = true;
+    simBtn.disabled = true;
+
+    resultBall.className = 'ball';
+    showBall.className = 'ball';
+    showBall.classList.remove('show');
+
+    const res = draw();
+    resultBall.classList.add('fall');
+    resultBall.classList.add(res);
+
+    setTimeout(()=>{
+        if(res==='yellow') yellow++;
+        if(res==='white') white++;
+        if(res==='black') black++;
+
+        showBall.className = 'ball '+res;
+        showBall.classList.add('show');
+        updateStats();
+
+        isRunning = false;
+        drawBtn.disabled = false;
+        simBtn.disabled = false;
+    }, 800);
+}
+
+// 模拟1000次
+simBtn.onclick = function(){
+    if(isRunning) return;
+    const y = parseInt(yInput.value)||0;
+    const w = parseInt(wInput.value)||0;
+    const b = parseInt(bInput.value)||0;
+    const total = y+w+b;
+    if(total <=0){
+        alert('请输入至少1个球！');
+        return;
+    }
+
+    isRunning = true;
+    drawBtn.disabled = true;
+    simBtn.disabled = true;
+    log.textContent = '正在模拟1000次摸球...';
+
+    setTimeout(()=>{
+        let cy=0,cw=0,cb=0;
+        for(let i=0;i<1000;i++){
+            const r = Math.random();
+            if(r < y/total) cy++;
+            else if(r < (y+w)/total) cw++;
+            else cb++;
+        }
+        yellow += cy;
+        white += cw;
+        black += cb;
+        updateStats();
+        log.textContent = `1000次结果：黄${cy} 白${cw} 黑${cb}`;
+
+        isRunning = false;
+        drawBtn.disabled = false;
+        simBtn.disabled = false;
+    }, 100);
+}
+
+// 重置
+resetBtn.onclick = function(){
+    yellow = 0;
+    white = 0;
+    black = 0;
+    updateStats();
+    log.textContent = '';
+    resultBall.className = 'ball';
+    showBall.className = 'ball';
+    showBall.classList.remove('show');
+}
+
+// 更新统计
+function updateStats(){
+    stats.innerHTML = `
+黄球：${yellow} 次<br>
+白球：${white} 次<br>
+黑球：${black} 次
+    `;
+}
+</script>
+</body>
+</html>
