@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3D立体摸奖箱（双色球滚落）</title>
+<style>
+*{box-sizing:border-box;font-family:sans-serif}
+body{
+background:#f8f9fa;
+min-height:100vh;
+display:flex;
+flex-direction:column;
+align-items:center;
+padding:50px 20px;
+gap:25px;
+}
+.title{
+font-size:32px;
+font-weight:bold;
+color:#222;
+}
+
+/* 3D立体不透明摸奖箱 */
+.box{
+width:360px;
+height:240px;
+background: linear-gradient(150deg, #222, #444);
+border:5px solid #0d6efd;
+border-radius:20px;
+position:relative;
+overflow:hidden;
+box-shadow: 
+  0 10px 30px rgba(0,0,0,0.4),
+  inset 0 5px 10px rgba(255,255,255,0.1);
+transform: perspective(800px) rotateX(15deg);
+}
+
+/* 底部出口 */
+.exit{
+position:absolute;
+bottom:0;
+left:50%;
+transform:translateX(-50%);
+width:70px;
+height:30px;
+background:#0d6efd;
+border-top-left-radius:12px;
+border-top-right-radius:12px;
+box-shadow:0 -2px 5px rgba(0,0,0,0.3);
+}
+
+/* 球样式 */
+.ball{
+width:55px;
+height:55px;
+border-radius:50%;
+box-shadow:0 4px 10px rgba(0,0,0,0.4);
+}
+.white{
+background:#fff;
+border:2px solid #ddd;
+}
+.yellow{
+background:#ffc107;
+border:2px solid #e0a800;
+}
+
+/* 掉落动画球 */
+#resultBall{
+position:absolute;
+bottom:100%;
+left:50%;
+transform:translateX(-50%);
+opacity:0;
+}
+
+/* 双色球滚落动画 */
+#resultBall.fall{
+opacity:1;
+animation: fallBall 0.9s ease-in-out forwards;
+}
+
+@keyframes fallBall {
+0%   { bottom:100%; transform:translateX(-50%) scale(0.8); }
+50%  { bottom:-70px; transform:translateX(-50%) scale(1.15); }
+70%  { bottom:-50px; transform:translateX(-50%) scale(1); }
+85%  { bottom:-62px; transform:translateX(-50%) scale(1); }
+100% { bottom:-55px; transform:translateX(-50%) scale(1); }
+}
+
+/* 结果可视化区域 */
+.result-box{
+width:220px;
+height:120px;
+background:#fff;
+border:3px solid #0d6efd;
+border-radius:15px;
+display:flex;
+align-items:center;
+justify-content:center;
+box-shadow:0 5px 15px rgba(0,0,0,0.2);
+}
+#showBall{
+width:70px;
+height:70px;
+transform:scale(0);
+transition:all 0.5s cubic-bezier(0.34,1.56,0.64,1);
+}
+#showBall.show{
+transform:scale(1);
+}
+
+button{
+padding:16px 40px;
+font-size:19px;
+background:#0d6efd;
+color:white;
+border:none;
+border-radius:14px;
+cursor:pointer;
+box-shadow:0 4px 10px rgba(13,110,253,0.3);
+}
+button:disabled{
+background:#999;
+cursor:not-allowed;
+box-shadow:none;
+}
+
+.text{
+font-size:24px;
+font-weight:bold;
+color:#222;
+height:35px;
+}
+
+.stats{
+font-size:18px;
+background:#e9ecef;
+padding:14px 28px;
+border-radius:12px;
+color:#222;
+box-shadow:0 2px 5px rgba(0,0,0,0.1);
+}
+</style>
+</head>
+
+<body>
+<div class="title">🎲 3D立体摸奖箱实验</div>
+
+<!-- 3D立体摸奖箱 -->
+<div class="box">
+  <div class="exit"></div>
+  <div id="resultBall" class="ball"></div>
+</div>
+
+<!-- 结果可视化区域 -->
+<div class="text">本次摸球结果：</div>
+<div class="result-box">
+  <div id="showBall" class="ball"></div>
+</div>
+
+<button id="drawBtn">开始摸球</button>
+<div class="stats" id="stats">黄球：0 次　白球：0 次</div>
+
+<script>
+const drawBtn = document.getElementById('drawBtn');
+const resultBall = document.getElementById('resultBall');
+const showBall = document.getElementById('showBall');
+const stats = document.getElementById('stats');
+
+let yellow = 0, white = 0;
+let isDrawing = false;
+
+drawBtn.onclick = function(){
+  if(isDrawing) return;
+  isDrawing = true;
+  drawBtn.disabled = true;
+  
+  // 重置所有状态
+  resultBall.className = 'ball';
+  resultBall.classList.remove('fall');
+  showBall.className = 'ball';
+  showBall.classList.remove('show');
+  
+  // 1黄4白 随机
+  const r = Math.random();
+  const isYellow = r < 0.2;
+
+  // 触发滚落动画
+  setTimeout(()=>{
+    resultBall.classList.add('fall');
+    
+    if(isYellow){
+      resultBall.classList.add('yellow');
+      showBall.classList.add('yellow');
+      yellow++;
+    }else{
+      resultBall.classList.add('white');
+      showBall.classList.add('white');
+      white++;
+    }
+    
+    // 结果可视化弹出
+    setTimeout(()=>{
+      showBall.classList.add('show');
+    }, 300);
+    
+    stats.textContent = `黄球：${yellow} 次　白球：${white} 次`;
+    
+    // 解锁按钮
+    setTimeout(()=>{
+      isDrawing = false;
+      drawBtn.disabled = false;
+    }, 400);
+    
+  }, 500);
+}
+</script>
+</body>
+</html>
