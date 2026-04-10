@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>趣味抛硬币</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+        }
+
+        .title {
+            color: white;
+            font-size: 42px;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .coin-container {
+            width: 200px;
+            height: 200px;
+            position: relative;
+            perspective: 1000px;
+        }
+
+        .coin {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            transform-style: preserve-3d;
+        }
+
+        .coin-side {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            font-weight: bold;
+            color: white;
+            backface-visibility: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+        }
+
+        .heads {
+            background: radial-gradient(circle, #ffd700, #ff8c00);
+            transform: rotateY(0deg);
+        }
+
+        .tails {
+            background: radial-gradient(circle, #c0c0c0, #808080);
+            transform: rotateY(180deg);
+        }
+
+        .flip-btn {
+            padding: 15px 40px;
+            font-size: 22px;
+            background: #ffffff;
+            color: #764ba2;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .flip-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.3);
+            background: #f8f8f8;
+        }
+
+        .flip-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result {
+            color: white;
+            font-size: 28px;
+            text-align: center;
+            min-height: 40px;
+        }
+
+        .stats {
+            color: white;
+            font-size: 20px;
+            background: rgba(255,255,255,0.1);
+            padding: 15px 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body>
+    <h1 class="title">🎲 趣味抛硬币</h1>
+    
+    <div class="coin-container">
+        <div class="coin" id="coin">
+            <div class="coin-side heads">正</div>
+            <div class="coin-side tails">反</div>
+        </div>
+    </div>
+
+    <button class="flip-btn" id="flipBtn">点击抛硬币</button>
+    <div class="result" id="result"></div>
+    <div class="stats" id="stats">正面：0 次 | 反面：0 次</div>
+
+    <script>
+        const coin = document.getElementById('coin');
+        const flipBtn = document.getElementById('flipBtn');
+        const result = document.getElementById('result');
+        const stats = document.getElementById('stats');
+        
+        let headsCount = 0;
+        let tailsCount = 0;
+        let isFlipping = false;
+        let currentRotation = 0;
+
+        function flipCoin() {
+            if (isFlipping) return;
+            
+            isFlipping = true;
+            flipBtn.disabled = true;
+            result.textContent = '硬币正在旋转...';
+            
+            // 随机结果
+            const random = Math.floor(Math.random() * 2);
+            let addRotation = random === 0 ? 1800 : 1980;
+            currentRotation += addRotation;
+            
+            // 执行旋转动画
+            coin.style.transition = 'transform 1.5s ease-in-out';
+            coin.style.transform = `rotateY(${currentRotation}deg)`;
+            
+            // 动画结束显示结果
+            setTimeout(() => {
+                if (random === 0) {
+                    headsCount++;
+                    result.textContent = '🎉 结果：正面！';
+                } else {
+                    tailsCount++;
+                    result.textContent = '🎉 结果：反面！';
+                }
+                
+                stats.textContent = `正面：${headsCount} 次 | 反面：${tailsCount} 次`;
+                
+                isFlipping = false;
+                flipBtn.disabled = false;
+            }, 1500);
+        }
+
+        flipBtn.addEventListener('click', flipCoin);
+    </script>
+</html>
